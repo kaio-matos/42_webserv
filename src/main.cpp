@@ -1,5 +1,5 @@
 #include <iostream>
-#include <webserv>
+#include <webserv.hpp>
 
 int main() {
     std::cout << "Hello, world!" << std::endl;

@@ -2,7 +2,7 @@
 NAME		= webserv
 
 OBJS_DIR	= objects
-SRC_DIR		= .
+SRC_DIR		= src
 
 CCF_STRICT	= -Wall -Wextra -Werror -std=c++98
 CCF_DEBUG	= -g3 -D VERBOSE=1
