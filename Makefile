@@ -11,8 +11,8 @@ FLAGS		= -I ./$(SRC_DIR)/includes
 SOURCES 	:= $(shell find . -name "*.cpp")
 OBJECTS 	:= $(addprefix $(OBJS_DIR)/,$(patsubst %.cpp,%.o,$(SOURCES)))
 
-
-ifdef VERBOSE
+ifdef DEBUG
+	CCF_STRICT = -std=c++98
 	CCF_STRICT += $(CCF_DEBUG)
 endif
 
@@ -31,7 +31,6 @@ $(addprefix $(OBJS_DIR)/,%.o): %.cpp
 
 .PHONY: clean
 clean:
-	rm -f .gitignore
 	rm -rf $(OBJS_DIR)
 
 .PHONY: fclean
@@ -44,6 +43,10 @@ re: fclean all;
 ################################################################################
 # DEBUG
 ################################################################################
+
+.PHONY: debug/generate-lsp-config
+debug/generate-lsp-config:
+	bear -- make debug/run -j4
 
 .PHONY: debug/run
 debug/run: re
