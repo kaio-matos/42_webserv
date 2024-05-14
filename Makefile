@@ -1,5 +1,5 @@
 
-NAME		= webserv
+NAME		= webserver
 
 OBJS_DIR	= objects
 SRC_DIR		= src
