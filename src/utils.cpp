@@ -1,11 +1,5 @@
 #include <webserv.hpp>
 
-template <typename T> std::string NumberToString(T Number) {
-  std::ostringstream ss;
-  ss << Number;
-  return ss.str();
-}
-
 // TODO: fix this
 std::string readfd(int fd) {
   std::string result;
@@ -54,4 +48,52 @@ std::ostream &operator<<(std::ostream &os, const Socket<sockaddr_in> &value) {
      << "\tAddress:   " << getAddressFromSockAddrin(value.getRawAddr())
      << "\n}";
   return os;
+}
+
+std::string readFile(std::string filename, char separator) {
+  std::ifstream file(filename.c_str());
+
+  if (file.fail()) {
+    std::string err = "Error opening the file: ";
+    err.append(filename);
+    file.close();
+    throw std::runtime_error(err);
+  }
+
+  DIR *dir = opendir(filename.c_str());
+
+  if (dir != NULL) {
+
+    std::string err = "Error opening the file: ";
+    err.append(filename);
+    closedir(dir);
+    throw std::runtime_error(err);
+  }
+
+  std::string line, result;
+  unsigned int i = 0;
+  while (std::getline(file, line)) {
+    if (line.empty())
+      continue;
+
+    if (i != 0) {
+      result.append("\n");
+    }
+    result.append(line);
+    i++;
+  }
+
+  file.close();
+  return result;
+}
+
+std::string replaceAll(std::string str, const std::string &from,
+                       const std::string &to) {
+  size_t start_pos = 0;
+  while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+    str.replace(start_pos, from.length(), to);
+    start_pos +=
+        to.length(); // Handles case where 'to' is a substring of 'from'
+  }
+  return str;
 }

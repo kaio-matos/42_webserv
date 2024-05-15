@@ -33,6 +33,7 @@ public:
   Socket &operator=(const Socket &value) { return *this; }
 
   ~Socket(void) {
+    std::cout << "Destroying sockets..." << std::endl;
     close();
     delete _addr;
     _addr = NULL;
