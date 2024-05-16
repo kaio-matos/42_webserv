@@ -30,25 +30,15 @@ int main() {
   std::cout << request << std::endl;
   std::cout << "--------------------------------------------" << std::endl;
 
-  std::map<std::string, std::string> headers;
+  Headers headers;
 
   headers["Server"] = "webserv";
   headers["Content-Length"] = SSTR(index_html.size());
   headers["Content-Type"] = "text/html";
   headers["Connection"] = "Keep-Alive";
 
-  std::string headersStr;
-  for (std::map<std::string, std::string>::iterator it = headers.begin();
-       it != headers.end(); it++) {
-    headersStr.append(it->first);
-    headersStr.append(": ");
-    headersStr.append(it->second);
-    headersStr.append("\r\n");
-  }
-  headersStr.append("\r\n");
-
   std::string response = "HTTP/1.1 200 OK\r\n";
-  response.append(headersStr);
+  response.append(headers.toString());
   response.append(index_html);
 
   std::cout << "Sending Response" << std::endl;

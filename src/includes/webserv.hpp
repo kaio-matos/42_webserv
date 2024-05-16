@@ -40,6 +40,7 @@ std::string replaceAll(std::string str, const std::string &from,
 template <typename T> class Socket;
 std::ostream &operator<<(std::ostream &os, const Socket<sockaddr_in> &value);
 
+#include <Headers.hpp>
 #include <Socket.hpp>
 
 #endif
