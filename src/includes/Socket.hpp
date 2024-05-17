@@ -21,7 +21,6 @@ public:
   Socket &operator=(const Socket &value) { return *this; }
 
   ~Socket(void) {
-    std::cout << "Destroying sockets..." << std::endl;
     close();
     delete _addr;
     _addr = NULL;
@@ -45,15 +44,15 @@ public:
   // TODO: This function is not properly made
   std::string read(void) {
     std::string result;
-    char buff[100];
-    int bytes = ::read(_fd, buff, 100);
+    char buff[30000];
+    int bytes = ::read(_fd, buff, 30000);
     while (bytes) {
       buff[bytes] = '\0';
-      if (bytes < 100) {
+      if (bytes < 30000) {
         result.append(buff);
         bytes = 0;
       } else {
-        bytes = ::read(_fd, buff, 100);
+        bytes = ::read(_fd, buff, 30000);
       }
     }
     return result;
