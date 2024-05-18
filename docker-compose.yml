@@ -1,0 +1,9 @@
+services:
+    server:
+        container_name: server
+        build:
+            context: .
+            dockerfile: ./.docker/dev/Dockerfile
+        network_mode: host
+        stdin_open: true
+        tty: true
