@@ -4,6 +4,8 @@ services:
         build:
             context: .
             dockerfile: ./.docker/dev/Dockerfile
+        volumes:
+            - .:/app
         network_mode: host
         stdin_open: true
         tty: true
