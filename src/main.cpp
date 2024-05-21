@@ -1,7 +1,7 @@
 #include <webserv.hpp>
 
 void ctrl_c_handler(int s) {
-  std::cout << "Closing sockets" << std::endl;
+  DebugLog << "Closing sockets";
   exit(1);
 }
 
@@ -17,33 +17,17 @@ std::string handleRequest(std::string request) {
   return index_html;
 }
 
-int main() {
-  signal(SIGINT, ctrl_c_handler);
-  // signal(SIGABRT, ctrl_c_handler);
-  Socket<struct sockaddr_in> tcp_socket(AF_INET, SOCK_STREAM, 0);
-  struct sockaddr_in addr;
-
-  addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = stringAddressToBytes("0.0.0.0");
-  addr.sin_port = htons(8080);
-
-  tcp_socket.bind(addr);
-  tcp_socket.listen(5);
-
-  std::cout << "Listening on:\n" << tcp_socket << std::endl;
-
+void listenToRequests(Socket<struct sockaddr_in> &tcp_socket) {
   while (1) {
-    if (VERBOSE)
-      std::cout << "---------------------------------------------" << std::endl;
+    DebugLog << "---------------------------------------------";
+
     Socket<struct sockaddr_in> peer_socket(AF_INET, SOCK_STREAM, 0);
 
     tcp_socket.accept(peer_socket);
 
     std::string request = peer_socket.read();
-    if (VERBOSE) {
-      std::cout << "Reading peer socket" << std::endl;
-      std::cout << request << std::endl;
-    }
+    DebugLog << "Reading peer socket";
+    DebugLog << request;
 
     std::string content = handleRequest(request);
 
@@ -58,14 +42,30 @@ int main() {
     response.append(headers.toString());
     response.append(content);
 
-    if (VERBOSE) {
-      std::cout << "Sending Response" << std::endl;
-      std::cout << response << std::endl;
-    }
+    DebugLog << "Sending Response";
+    DebugLog << response;
 
     peer_socket.write(response);
-    if (VERBOSE)
-      std::cout << "---------------------------------------------" << std::endl;
+    DebugLog << "---------------------------------------------";
   }
+}
+
+int main() {
+  signal(SIGINT, ctrl_c_handler);
+  // signal(SIGABRT, ctrl_c_handler);
+  Socket<struct sockaddr_in> tcp_socket(AF_INET, SOCK_STREAM, 0);
+  struct sockaddr_in addr;
+
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = stringAddressToBytes("0.0.0.0");
+  addr.sin_port = htons(8080);
+
+  tcp_socket.bind(addr);
+  tcp_socket.listen(5);
+
+  DebugLog << "Listening on:\n" << tcp_socket;
+
+  listenToRequests(tcp_socket);
+
   return 0;
 }
