@@ -75,7 +75,7 @@ public:
     _isListener = true;
   }
 
-  int accept(Socket &peer_socket) {
+  void accept(Socket &peer_socket) {
     if (!_isListener) {
       throw std::runtime_error(
           "Socket is trying to accept messages without setting listener flag");

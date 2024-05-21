@@ -24,16 +24,19 @@ int main() {
   struct sockaddr_in addr;
 
   addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = stringAddressToBytes("127.0.0.1");
+  addr.sin_addr.s_addr = stringAddressToBytes("0.0.0.0");
   addr.sin_port = htons(8080);
 
   tcp_socket.bind(addr);
   tcp_socket.listen(5);
 
+  std::cout << "Listening on:\n" << tcp_socket << std::endl;
+
   while (1) {
     if (VERBOSE)
       std::cout << "---------------------------------------------" << std::endl;
     Socket<struct sockaddr_in> peer_socket(AF_INET, SOCK_STREAM, 0);
+
     tcp_socket.accept(peer_socket);
 
     std::string request = peer_socket.read();

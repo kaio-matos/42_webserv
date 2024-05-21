@@ -35,8 +35,7 @@ std::string getAddressFromSockAddrin(const struct sockaddr_in addr) {
   if (int err = getnameinfo(reinterpret_cast<const struct sockaddr *>(&addr),
                             sizeof(addr), host_buffer, sizeof(host_buffer),
                             NULL, 0, NI_NAMEREQD)) {
-    throw std::runtime_error(
-        std::string("Could not resolve name: ").append(gai_strerror(err)));
+    return "Not known";
   }
   return std::string(host_buffer);
 }
