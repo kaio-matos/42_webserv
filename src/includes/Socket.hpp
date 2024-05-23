@@ -41,19 +41,21 @@ public:
 
   void connect(void) {}
 
-  // TODO: This function is not properly made
-  std::string read(void) {
+  std::string read(std::string eof) {
     std::string result;
-    char buff[30000];
-    int bytes = ::read(_fd, buff, 30000);
+    int MAX_READ_BYTES = 100;
+    char buff[MAX_READ_BYTES];
+
+    int bytes = ::read(_fd, buff, MAX_READ_BYTES);
     while (bytes) {
-      buff[bytes] = '\0';
-      if (bytes < 30000) {
-        result.append(buff);
-        bytes = 0;
-      } else {
-        bytes = ::read(_fd, buff, 30000);
+      std::string buffer(buff, bytes);
+      result.append(buffer);
+
+      if (buffer.substr(bytes - eof.length(), eof.length()) == eof){
+        break ;
       }
+
+      bytes = ::read(_fd, buff, MAX_READ_BYTES);
     }
     return result;
   }

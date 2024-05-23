@@ -25,7 +25,7 @@ void listenToRequests(Socket<struct sockaddr_in> &tcp_socket) {
 
     tcp_socket.accept(peer_socket);
 
-    std::string request = peer_socket.read();
+    std::string request = peer_socket.read("\r\n\r\n");
     DebugLog << "Reading peer socket";
     DebugLog << request;
 
