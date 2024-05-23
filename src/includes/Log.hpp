@@ -6,7 +6,7 @@ class Log {
 public:
   Log(const std::string &funcName) {
     if (VERBOSE) {
-      std::cout << funcName << " --> ";
+      std::cout << "[" << funcName << "] ";
     }
   }
 

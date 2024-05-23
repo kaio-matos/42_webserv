@@ -51,6 +51,7 @@ void listenToRequests(Socket<struct sockaddr_in> &tcp_socket) {
 }
 
 int main() {
+  DebugLog << BOLDCYAN << "-------------------------- Starting webserv --------------------------";
   signal(SIGINT, ctrl_c_handler);
   // signal(SIGABRT, ctrl_c_handler);
   Socket<struct sockaddr_in> tcp_socket(AF_INET, SOCK_STREAM, 0);
