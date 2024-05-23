@@ -14,6 +14,11 @@ public:
     _isOpen = false;
     _isListener = false;
     _isClosed = false;
+
+    int opt = 1;
+    if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+      throw std::runtime_error("Error while setting socket as reusable");
+    }
   }
 
   Socket(const Socket &value) {}
@@ -51,8 +56,8 @@ public:
       std::string buffer(buff, bytes);
       result.append(buffer);
 
-      if (buffer.substr(bytes - eof.length(), eof.length()) == eof){
-        break ;
+      if (buffer.substr(bytes - eof.length(), eof.length()) == eof) {
+        break;
       }
 
       bytes = ::read(_fd, buff, MAX_READ_BYTES);
