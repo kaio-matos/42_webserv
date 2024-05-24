@@ -8,6 +8,9 @@ public:
     _domain = domain;
     _type = type;
     _protocol = protocol;
+    // TODO: make the creation of a socket optional since Socket::accept is also
+    // creating one for the clients so when we instantate a Socket for a client
+    // socket we are creating one socket here and in Socket::accept
     _fd = socket(domain, type, protocol);
     _addr = NULL;
 
