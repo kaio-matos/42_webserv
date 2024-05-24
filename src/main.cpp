@@ -18,40 +18,72 @@ std::string handleRequest(std::string request) {
 }
 
 void listenToRequests(Socket<struct sockaddr_in> &tcp_socket) {
+  Socket<struct sockaddr_in> peer_socket(AF_INET, SOCK_STREAM, 0);
+
+  std::vector<Socket<struct sockaddr_in> > sockets;
+
+  sockets.push_back(tcp_socket);
+  sockets.push_back(peer_socket);
+
+  int num_fds = sockets.size();
+  struct pollfd poll_fds[num_fds];
+  int timeout = (5 * 60 * 1000); // 5 minute (in milliseconds)
+
   while (1) {
     DebugLog << "---------------------------------------------";
 
-    Socket<struct sockaddr_in> peer_socket(AF_INET, SOCK_STREAM, 0);
+    for (int i = 0; i < num_fds; i++) {
+      poll_fds[i].fd = sockets[i].getFd();
+      poll_fds[i].events = POLLIN;
+    }
 
-    tcp_socket.accept(peer_socket);
+    int ret = poll(poll_fds, num_fds, timeout);
+    if (ret < 0) {
+      throw new std::runtime_error("poll error");
+    } else if (ret == 0) {
+      DebugLog << BOLDBLUE << "Poll timed out";
+      continue;
+    }
 
-    std::string request = peer_socket.read("\r\n\r\n");
-    DebugLog << "Reading peer socket";
-    DebugLog << request;
+    for (int i = 0; i < num_fds; i++) {
+      Socket<struct sockaddr_in> peer_socket = sockets[i];
 
-    std::string content = handleRequest(request);
+      if (poll_fds[i].revents & POLLIN) {
+        tcp_socket.accept(peer_socket);
 
-    Headers headers;
+        std::string request = peer_socket.read("\r\n\r\n");
+        DebugLog << "Reading peer socket";
+        DebugLog << request;
 
-    headers["Server"] = "webserv";
-    headers["Content-Length"] = SSTR(content.size());
-    headers["Content-Type"] = "text/html";
-    headers["Connection"] = "Keep-Alive";
+        std::string content = handleRequest(request);
 
-    std::string response = "HTTP/1.1 200 OK\r\n";
-    response.append(headers.toString());
-    response.append(content);
+        Headers headers;
 
-    DebugLog << "Sending Response";
-    DebugLog << response;
+        headers["Server"] = "ebserv";
+        headers["Content-Length"] = SSTR(content.size());
+        headers["Content-Type"] = "text/html";
+        headers["Connection"] = "Keep-Alive";
 
-    peer_socket.write(response);
+        std::string response = "HTTP/1.1 200 OK\r\n";
+        response.append(headers.toString());
+        response.append(content);
+
+        DebugLog << "Sending Response";
+        DebugLog << response;
+
+        peer_socket.write(response);
+        peer_socket.close();
+      }
+    }
+
     DebugLog << "---------------------------------------------";
   }
 }
 
 int main() {
-  DebugLog << BOLDCYAN << "-------------------------- Starting webserv --------------------------";
+  DebugLog << BOLDCYAN
+           << "-------------------------- Starting webserv "
+              "--------------------------";
   signal(SIGINT, ctrl_c_handler);
   // signal(SIGABRT, ctrl_c_handler);
   Socket<struct sockaddr_in> tcp_socket(AF_INET, SOCK_STREAM, 0);
@@ -67,6 +99,8 @@ int main() {
   DebugLog << "Listening on:\n" << tcp_socket;
 
   listenToRequests(tcp_socket);
+
+  tcp_socket.close();
 
   return 0;
 }

@@ -19,14 +19,36 @@ public:
     if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
       throw std::runtime_error("Error while setting socket as reusable");
     }
+
+    if (fcntl(_fd, F_SETFL, O_NONBLOCK) < 0) {
+      throw std::runtime_error("Error while setting socket as non-blocking");
+    }
   }
 
-  Socket(const Socket &value) {}
+  Socket(const Socket &value) { *this = value; }
 
-  Socket &operator=(const Socket &value) { return *this; }
+  Socket &operator=(const Socket &value) {
+    _domain = value._domain;
+    _type = value._type;
+    _protocol = value._protocol;
+    _fd = value._fd;
+    _addr = NULL;
+    if (value._addr != NULL) {
+      _allocateAddr();
+      memcpy(_addr, &value._addr, sizeof(value._addr));
+    }
+
+    _isOpen = value._isOpen;
+    _isListener = value._isListener;
+    _isClosed = value._isClosed;
+    return *this;
+  }
 
   ~Socket(void) {
-    close();
+    // TODO: This was commented due to issues with std::vector, is there another
+    // option?
+
+    // close();
     delete _addr;
     _addr = NULL;
   }
