@@ -33,6 +33,7 @@ public:
 
     _setSocketAsReusable(_fd);
     _setSocketAsNonBlocking(_fd);
+    _sockets.push_back(*this);
   }
 
   Socket(const Socket &value) { *this = value; }
@@ -148,6 +149,41 @@ public:
     // _setSocketAsReusable(cfd);
     // _setSocketAsNonBlocking(cfd);
     peer_socket._fd = cfd;
+    _sockets.push_back(peer_socket);
+  }
+
+  void poll(std::string (*onRequest)(std::string)) {
+    int num_fds = _sockets.size();
+    struct pollfd poll_fds[num_fds];
+    int timeout = (5 * 60 * 1000); // 5 minutes (in milliseconds)
+
+    while (1) {
+      for (int i = 0; i < num_fds; i++) {
+        poll_fds[i].fd = _sockets[i].getFd();
+        poll_fds[i].events = POLLIN;
+      }
+
+      int ret = ::poll(poll_fds, num_fds, timeout);
+      if (ret < 0) {
+        throw new std::runtime_error("poll error");
+      } else if (ret == 0) {
+        DebugLog << BOLDBLUE << "Poll timed out";
+        continue;
+      }
+
+      for (int i = 0; i < num_fds; i++) {
+        Socket<struct sockaddr_in> peer_socket = _sockets[i];
+
+        if (poll_fds[i].revents & POLLIN) {
+          accept(peer_socket);
+
+          std::string request = peer_socket.read("\r\n\r\n");
+          std::string response = onRequest(request);
+          peer_socket.write(response);
+          peer_socket.close();
+        }
+      }
+    }
   }
 
   bool isEmpty() const { return (_fd == -1 && _addr == NULL); }
@@ -164,6 +200,8 @@ public:
   T getRawAddr() const { return *_addr; }
 
 private:
+  static std::vector<Socket<T> > _sockets;
+
   int _fd;
   int _domain;
   int _type;
@@ -195,5 +233,7 @@ private:
     }
   }
 };
+template <typename T>
+std::vector<Socket<T> > Socket<T>::_sockets = std::vector<Socket<T> >();
 
 #endif

@@ -17,70 +17,28 @@ std::string handleRequest(std::string request) {
   return index_html;
 }
 
-void listenToRequests(Socket<struct sockaddr_in> &tcp_socket) {
-  Socket<struct sockaddr_in> peer_socket;
+std::string onRequest(std::string request) {
+  DebugLog << "---------------------------------------------";
+  DebugLog << "Reading peer socket";
+  DebugLog << request;
 
-  std::vector<Socket<struct sockaddr_in> > sockets;
+  std::string content = handleRequest(request);
 
-  sockets.push_back(tcp_socket);
-  sockets.push_back(peer_socket);
+  Headers headers;
 
-  int num_fds = sockets.size();
-  struct pollfd poll_fds[num_fds];
-  int timeout = (5 * 60 * 1000); // 5 minutes (in milliseconds)
+  headers["Server"] = "ebserv";
+  headers["Content-Length"] = SSTR(content.size());
+  headers["Content-Type"] = "text/html";
+  headers["Connection"] = "Keep-Alive";
 
-  while (1) {
-    DebugLog << "---------------------------------------------";
+  std::string response = "HTTP/1.1 200 OK\r\n";
+  response.append(headers.toString());
+  response.append(content);
 
-    for (int i = 0; i < num_fds; i++) {
-      poll_fds[i].fd = sockets[i].getFd();
-      poll_fds[i].events = POLLIN;
-    }
-
-    int ret = poll(poll_fds, num_fds, timeout);
-    if (ret < 0) {
-      throw new std::runtime_error("poll error");
-    } else if (ret == 0) {
-      DebugLog << BOLDBLUE << "Poll timed out";
-      continue;
-    }
-
-    for (int i = 0; i < num_fds; i++) {
-      Socket<struct sockaddr_in> peer_socket = sockets[i];
-
-      if (poll_fds[i].revents & POLLIN) {
-        tcp_socket.accept(peer_socket);
-
-        // if (peer_socket.isServer()) {
-        //   continue;
-        // }
-        std::string request = peer_socket.read("\r\n\r\n");
-        DebugLog << "Reading peer socket";
-        DebugLog << request;
-
-        std::string content = handleRequest(request);
-
-        Headers headers;
-
-        headers["Server"] = "ebserv";
-        headers["Content-Length"] = SSTR(content.size());
-        headers["Content-Type"] = "text/html";
-        headers["Connection"] = "Keep-Alive";
-
-        std::string response = "HTTP/1.1 200 OK\r\n";
-        response.append(headers.toString());
-        response.append(content);
-
-        DebugLog << "Sending Response";
-        DebugLog << response;
-
-        peer_socket.write(response);
-        peer_socket.close();
-      }
-    }
-
-    DebugLog << "---------------------------------------------";
-  }
+  DebugLog << "Sending Response";
+  DebugLog << response;
+  DebugLog << "---------------------------------------------";
+  return response;
 }
 
 int main() {
@@ -101,7 +59,7 @@ int main() {
 
   DebugLog << "Listening on:\n" << tcp_socket;
 
-  listenToRequests(tcp_socket);
+  tcp_socket.poll(onRequest);
 
   tcp_socket.close();
 
