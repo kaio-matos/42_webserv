@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN apt update -y
 RUN apt-get upgrade -y
-RUN apt install -y curl build-essential 
+RUN apt install -y curl valgrind build-essential 
 COPY . .
 
 

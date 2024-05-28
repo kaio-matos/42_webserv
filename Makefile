@@ -54,6 +54,6 @@ debug/run: re
 
 .PHONY: debug/valgrind
 debug/valgrind: re
-	valgrind ./$(NAME)
+	valgrind --leak-check=full --show-leak-kinds=all ./$(NAME) 
 
 
