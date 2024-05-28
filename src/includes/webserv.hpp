@@ -59,8 +59,9 @@ std::ostream &operator<<(std::ostream &os, const Socket<sockaddr_in> &value);
 #define BOLDCYAN "\033[1m\033[36m"    /* Bold Cyan */
 #define BOLDWHITE "\033[1m\033[37m"   /* Bold White */
 
-#include <Headers.hpp>
 #include <Log.hpp>
+
+#include <Headers.hpp>
 #include <Socket.hpp>
 
 #endif

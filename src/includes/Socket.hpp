@@ -4,28 +4,35 @@
 
 template <typename T> class Socket {
 public:
+  Socket(void) {
+    _domain = -1;
+    _type = -1;
+    _protocol = -1;
+    _fd = -1;
+    _addr = NULL;
+
+    _isOpen = false;
+    _isListener = false;
+    _isClosed = false;
+    _isClient = true;
+    _isServer = false;
+  }
+
   Socket(int domain, int type, int protocol) {
     _domain = domain;
     _type = type;
     _protocol = protocol;
-    // TODO: make the creation of a socket optional since Socket::accept is also
-    // creating one for the clients so when we instantate a Socket for a client
-    // socket we are creating one socket here and in Socket::accept
     _fd = socket(domain, type, protocol);
     _addr = NULL;
 
     _isOpen = false;
     _isListener = false;
     _isClosed = false;
+    _isClient = false;
+    _isServer = true;
 
-    int opt = 1;
-    if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
-      throw std::runtime_error("Error while setting socket as reusable");
-    }
-
-    if (fcntl(_fd, F_SETFL, O_NONBLOCK) < 0) {
-      throw std::runtime_error("Error while setting socket as non-blocking");
-    }
+    _setSocketAsReusable(_fd);
+    _setSocketAsNonBlocking(_fd);
   }
 
   Socket(const Socket &value) { *this = value; }
@@ -44,6 +51,8 @@ public:
     _isOpen = value._isOpen;
     _isListener = value._isListener;
     _isClosed = value._isClosed;
+    _isClient = value._isClient;
+    _isServer = value._isServer;
     return *this;
   }
 
@@ -77,6 +86,9 @@ public:
     char buff[MAX_READ_BYTES];
 
     int bytes = ::read(_fd, buff, MAX_READ_BYTES);
+    if (bytes == -1) {
+      throw std::runtime_error("Error while trying to read socket");
+    }
     while (bytes) {
       std::string buffer(buff, bytes);
       result.append(buffer);
@@ -101,6 +113,10 @@ public:
   }
 
   void listen(int n) {
+    if (!_isServer) {
+      throw std::runtime_error(
+          "Error while trying to listen on a non server socket");
+    }
     if (::listen(_fd, n) == -1) {
       throw std::runtime_error("Error while setting socket as listener");
     }
@@ -112,6 +128,11 @@ public:
       throw std::runtime_error(
           "Socket is trying to accept messages without setting listener flag");
     }
+    if (!_isServer) {
+      throw std::runtime_error(
+          "Error: trying to accept on a non server socket");
+    }
+
     peer_socket._allocateAddr();
     unsigned int peer_addr_size = sizeof(*peer_socket._addr);
 
@@ -121,6 +142,11 @@ public:
       throw std::runtime_error("Error while trying to accept a request ");
     }
 
+    // TODO: check if is necessary to set the accepted socket as reusable and
+    // non-blocking
+    //
+    // _setSocketAsReusable(cfd);
+    // _setSocketAsNonBlocking(cfd);
     peer_socket._fd = cfd;
   }
 
@@ -128,6 +154,8 @@ public:
   bool isOpen() const { return _isOpen; }
   bool isListener() const { return _isListener; }
   bool isClosed() const { return _isClosed; }
+  bool isClient() const { return _isClient; }
+  bool isServer() const { return _isServer; }
 
   int getFd() const { return _fd; }
   int getDomain() const { return _domain; }
@@ -145,10 +173,25 @@ private:
   bool _isOpen;
   bool _isListener;
   bool _isClosed;
+  bool _isClient;
+  bool _isServer;
 
   void _allocateAddr(void) {
     if (_addr == NULL) {
       _addr = new T;
+    }
+  }
+
+  void _setSocketAsReusable(int fd) {
+    int opt = 1;
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+      throw std::runtime_error("Error while setting socket as reusable");
+    }
+  }
+
+  void _setSocketAsNonBlocking(int fd) {
+    if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
+      throw std::runtime_error("Error while setting socket as non-blocking");
     }
   }
 };

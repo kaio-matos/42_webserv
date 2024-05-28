@@ -18,7 +18,7 @@ std::string handleRequest(std::string request) {
 }
 
 void listenToRequests(Socket<struct sockaddr_in> &tcp_socket) {
-  Socket<struct sockaddr_in> peer_socket(AF_INET, SOCK_STREAM, 0);
+  Socket<struct sockaddr_in> peer_socket;
 
   std::vector<Socket<struct sockaddr_in> > sockets;
 
@@ -27,7 +27,7 @@ void listenToRequests(Socket<struct sockaddr_in> &tcp_socket) {
 
   int num_fds = sockets.size();
   struct pollfd poll_fds[num_fds];
-  int timeout = (5 * 60 * 1000); // 5 minute (in milliseconds)
+  int timeout = (5 * 60 * 1000); // 5 minutes (in milliseconds)
 
   while (1) {
     DebugLog << "---------------------------------------------";
@@ -51,6 +51,9 @@ void listenToRequests(Socket<struct sockaddr_in> &tcp_socket) {
       if (poll_fds[i].revents & POLLIN) {
         tcp_socket.accept(peer_socket);
 
+        // if (peer_socket.isServer()) {
+        //   continue;
+        // }
         std::string request = peer_socket.read("\r\n\r\n");
         DebugLog << "Reading peer socket";
         DebugLog << request;
