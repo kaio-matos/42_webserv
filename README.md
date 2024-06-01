@@ -1,5 +1,8 @@
 # 42_webserv
 
+[ABANDONED] Due to changes on the delivery date this was abandoned in favor of a simpler project [ft_irc](https://github.com/kaio-matos/42_ft__irc)
+
+
 A HTTP server
 
 HTTP RFC -> https://datatracker.ietf.org/doc/html/rfc2616
